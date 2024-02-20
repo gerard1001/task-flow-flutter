@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_flow_flutter/config/routes/routes_config.dart';
+import 'package:task_flow_flutter/config/theme/theme_config.dart';
 
 void main() {
   runApp(const MainApp());
@@ -9,26 +11,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Task Flow',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Stack(
-          children: <Widget>[
-            Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage("lib/images/bg.png"),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const Center(
-              child: Text("Hello backgrounds"),
-            )
-          ],
-        ),
-      ),
+      theme: TaskFlowTheme.themeData,
+      routerConfig: routesConfig,
     );
   }
 }
