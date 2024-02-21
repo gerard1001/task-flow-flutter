@@ -1,7 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+// import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
-import 'package:im_stepper/stepper.dart';
+// import 'package:task_flow_flutter/pages/trials.dart';
+import 'package:multi_dropdown/multiselect_dropdown.dart';
 
 class SignUpPage extends StatefulWidget {
   static const String routeName = '/sign-up';
@@ -33,6 +40,26 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   final TextEditingController dateController = TextEditingController();
+  final MultiSelectController controller = MultiSelectController();
+
+  var log = Logger(
+    printer: PrettyPrinter(),
+  );
+
+  File? image;
+
+  Future pickImage(ImageSource source) async {
+    try {
+      final image = await ImagePicker().pickImage(source: source);
+      if (image == null) return;
+      final imageTemporary = File(image.path);
+      setState(() {
+        this.image = imageTemporary;
+      });
+    } on PlatformException catch (e) {
+      log.i(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +133,8 @@ class _SignUpPageState extends State<SignUpPage> {
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: activeStep == 0
                           ? primaryInfo()
-                          : secondaryInfo(selectDate, dateController),
+                          : secondaryInfo(selectDate, dateController,
+                              controller, pickImage, image),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,7 +142,15 @@ class _SignUpPageState extends State<SignUpPage> {
                         activeStep == 0 ? Container() : previousButton(),
                         activeStep == upperBound
                             ? MaterialButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  // context.replace(TrialPage.routeName);
+                                  // print(
+                                  //     '******************************************************');
+                                  // print(controller.selectedOptions);
+                                  // print(
+                                  //     '******************************************************');
+                                  log.t(controller.selectedOptions.runtimeType);
+                                },
                                 color: TaskFlowColors.teal,
                                 minWidth:
                                     MediaQuery.of(context).size.width * 0.4,
@@ -231,6 +267,7 @@ Widget primaryInfo() {
       TextFormField(
         decoration: InputDecoration(
           labelText: 'First name',
+          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
             fontSize: 24,
             color: TaskFlowColors.secondaryDark,
@@ -242,6 +279,7 @@ Widget primaryInfo() {
       TextFormField(
         decoration: InputDecoration(
           labelText: 'Last name',
+          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
             fontSize: 24,
             color: TaskFlowColors.secondaryDark,
@@ -253,6 +291,7 @@ Widget primaryInfo() {
       TextFormField(
         decoration: InputDecoration(
           labelText: 'Email',
+          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
             fontSize: 24,
             color: TaskFlowColors.secondaryDark,
@@ -264,6 +303,7 @@ Widget primaryInfo() {
       TextFormField(
         decoration: InputDecoration(
           labelText: 'Password',
+          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
             fontSize: 24,
             color: TaskFlowColors.secondaryDark,
@@ -276,13 +316,14 @@ Widget primaryInfo() {
   );
 }
 
-Widget secondaryInfo(selectDate, dateController) {
+Widget secondaryInfo(selectDate, dateController, controller, pickImage, image) {
   return Column(
     children: [
       const SizedBox(height: 20),
       TextFormField(
         decoration: InputDecoration(
           labelText: 'Gender',
+          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
             fontSize: 24,
             color: TaskFlowColors.secondaryDark,
@@ -294,6 +335,7 @@ Widget secondaryInfo(selectDate, dateController) {
       TextFormField(
         controller: dateController,
         decoration: InputDecoration(
+          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelText: 'Birth date',
           labelStyle: TextStyle(
             fontSize: 24,
@@ -308,6 +350,147 @@ Widget secondaryInfo(selectDate, dateController) {
         },
       ),
       const SizedBox(height: 20),
+      MultiSelectDropDown(
+        controller: controller,
+        onOptionSelected: (List<ValueItem> selectedOptions) {},
+        options: const <ValueItem>[
+          ValueItem(label: 'Option 1', value: '1'),
+          ValueItem(label: 'Option 2', value: '2'),
+          ValueItem(label: 'Option 3', value: '3'),
+          ValueItem(label: 'Option 4', value: '4'),
+          ValueItem(label: 'Option 5', value: '5'),
+          ValueItem(label: 'Option 6', value: '6'),
+          ValueItem(label: 'Option 7', value: '7'),
+          ValueItem(label: 'Option 8', value: '8'),
+          ValueItem(label: 'Option 9', value: '9'),
+          ValueItem(label: 'Option 10', value: '10'),
+          ValueItem(label: 'Option 11', value: '11'),
+          ValueItem(label: 'Option 12', value: '12'),
+        ],
+        hint: 'Select categories',
+        hintColor: TaskFlowColors.secondaryDark,
+        hintStyle: TextStyle(
+          fontSize: 24,
+          color: TaskFlowColors.secondaryDark,
+        ),
+        selectionType: SelectionType.multi,
+        borderRadius: 4,
+        fieldBackgroundColor: const Color.fromRGBO(0, 0, 0, 0),
+        padding: const EdgeInsets.only(top: 4, left: 10, right: 4, bottom: 4),
+        borderWidth: 1,
+        borderColor: TaskFlowColors.secondaryDark,
+        chipConfig: ChipConfig(
+            wrapType: WrapType.values[0],
+            spacing: 3,
+            padding: const EdgeInsets.all(4),
+            autoScroll: true,
+            labelPadding: const EdgeInsets.only(top: 3, left: 8),
+            deleteIconColor: TaskFlowColors.secondaryDark,
+            backgroundColor: TaskFlowColors.grey,
+            radius: 6,
+            labelStyle: TextStyle(
+              color: TaskFlowColors.primaryDark,
+              fontSize: 20,
+            )),
+        dropdownHeight: 300,
+        optionTextStyle: const TextStyle(fontSize: 20),
+        selectedOptionIcon: const Icon(Icons.check_circle),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(top: 20.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                const Text(
+                  'Upload picture',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0.0, 0, 10, 0),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              pickImage(ImageSource.gallery);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: TaskFlowColors.brown),
+                              child: const Icon(
+                                Icons.file_upload_outlined,
+                                size: 40,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            'Upload',
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              pickImage(ImageSource.camera);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: TaskFlowColors.brown),
+                              child: const Icon(
+                                Icons.camera_alt_outlined,
+                                size: 40,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            'Take picture',
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                color: TaskFlowColors.grey,
+              ),
+              child: image != null
+                  ? Image.file(
+                      image!,
+                      fit: BoxFit.cover,
+                    )
+                  : const Icon(
+                      Icons.person,
+                      size: 60,
+                    ),
+            )
+          ],
+        ),
+      )
     ],
   );
 }
