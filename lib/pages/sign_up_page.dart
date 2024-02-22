@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
+import 'package:task_flow_flutter/api/category_api.dart';
+import 'package:task_flow_flutter/api/user_api.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
-// import 'package:task_flow_flutter/pages/trials.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -20,9 +20,59 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  var log = Logger(
+    printer: PrettyPrinter(),
+  );
+
+  List<ValueItem> categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCategories(); // Fetch categories when the widget initializes
+  }
+
+  Future<void> fetchCategories() async {
+    try {
+      final response = await CategoryApi.getCategories();
+
+      log.f('******************************************************');
+      log.t(response);
+      log.f('******************************************************');
+
+      if (response != null && response.statusCode == 200) {
+        List<ValueItem> fetchedCategories =
+            (response.data as List<dynamic>).map((category) {
+          return ValueItem(
+            label: category['name'],
+            value: category['categoryId'],
+          );
+        }).toList();
+
+        setState(() {
+          categories = fetchedCategories;
+        });
+      } else {
+        log.e('Invalid or unsuccessful response from the API.');
+      }
+    } catch (e) {
+      log.e('Error fetching categories: $e');
+    }
+  }
+
   int activeStep = 0;
   int lowerBound = 0;
   int upperBound = 1;
+
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController genderController = TextEditingController();
+  final TextEditingController birthDateController = TextEditingController();
+  final MultiSelectController categoriesController = MultiSelectController();
 
   Future<void> selectDate() async {
     DateTime? picked = await showDatePicker(
@@ -34,30 +84,82 @@ class _SignUpPageState extends State<SignUpPage> {
 
     if (picked != null) {
       setState(() {
-        dateController.text = picked.toString().split(" ")[0];
+        birthDateController.text = picked.toString().split(" ")[0];
       });
     }
   }
 
-  final TextEditingController dateController = TextEditingController();
-  final MultiSelectController controller = MultiSelectController();
-
-  var log = Logger(
-    printer: PrettyPrinter(),
-  );
-
-  File? image;
+  File? pickedImage;
 
   Future pickImage(ImageSource source) async {
     try {
-      final image = await ImagePicker().pickImage(source: source);
-      if (image == null) return;
-      final imageTemporary = File(image.path);
+      final pickedFile = await ImagePicker().pickImage(source: source);
+      // final imageTemporary = File(pickedFile.path);
       setState(() {
-        this.image = imageTemporary;
+        if (pickedFile != null) {
+          pickedImage = File(pickedFile.path);
+        }
       });
     } on PlatformException catch (e) {
       log.i(e);
+    }
+  }
+
+  void showInSnackBar(String value, String status) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor:
+            status == 'success' ? TaskFlowColors.teal : Colors.red[400],
+        content: Text(
+          value,
+          style: TextStyle(color: TaskFlowColors.primaryLight, fontSize: 18),
+        ),
+      ),
+    );
+  }
+
+  void submitFx() {
+    if (_formKey.currentState!.validate()) {
+      log.t({
+        'firstName': firstNameController.text,
+        'lastName': lastNameController.text,
+        'email': emailController.text,
+        'password': passwordController.text,
+        'gender': genderController.text,
+        'birthDate': birthDateController.text,
+        'categories':
+            categoriesController.selectedOptions.map((e) => e.value).toList(),
+        'image': pickedImage,
+      });
+    }
+  }
+
+  Future registerUser() async {
+    if (_formKey.currentState!.validate()) {
+      final response = await UserApi.registerUser(
+        firstNameController.text,
+        lastNameController.text,
+        emailController.text,
+        passwordController.text,
+        genderController.text,
+        birthDateController.text,
+        categoriesController.selectedOptions.map((e) => e.value).toList(),
+        pickedImage!,
+      );
+
+      log.f('******************************************************');
+      log.t(response);
+      log.t(response?.data);
+      log.t(response?.statusCode);
+      log.f('******************************************************');
+
+      if (response != null && response.statusCode == 201) {
+        showInSnackBar(response.data['message'], 'success');
+        log.t(response.data);
+      } else {
+        log.f(response?.data);
+        showInSnackBar(response!.data['error'], 'error');
+      }
     }
   }
 
@@ -70,10 +172,13 @@ class _SignUpPageState extends State<SignUpPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 20.0),
-              child:
-                  Image.asset('assets/images/logo.png', height: 80, width: 80),
+            GestureDetector(
+              onTap: () {},
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20.0),
+                child: Image.asset('assets/images/logo.png',
+                    height: 80, width: 80),
+              ),
             ),
             const Padding(
               padding: EdgeInsets.only(top: 20.0),
@@ -112,63 +217,78 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // IconStepper(
-                    //   stepColor: TaskFlowColors.brown,
-                    //   activeStepColor: TaskFlowColors.teal,
-                    //   icons: const [
-                    //     Icon(Icons.face),
-                    //     Icon(Icons.photo),
-                    //   ],
-                    //   activeStep: activeStep,
-                    //   onStepReached: (index) {
-                    //     setState(() {
-                    //       activeStep = index;
-                    //     });
-                    //   },
-                    // ),
-                    // header(),
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: activeStep == 0
-                          ? primaryInfo()
-                          : secondaryInfo(selectDate, dateController,
-                              controller, pickImage, image),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        activeStep == 0 ? Container() : previousButton(),
-                        activeStep == upperBound
-                            ? MaterialButton(
-                                onPressed: () {
-                                  // context.replace(TrialPage.routeName);
-                                  // print(
-                                  //     '******************************************************');
-                                  // print(controller.selectedOptions);
-                                  // print(
-                                  //     '******************************************************');
-                                  log.t(controller.selectedOptions.runtimeType);
-                                },
-                                color: TaskFlowColors.teal,
-                                minWidth:
-                                    MediaQuery.of(context).size.width * 0.4,
-                                padding: const EdgeInsets.only(
-                                    left: 0, right: 0, top: 15, bottom: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                child: Text('SUBMIT',
-                                    style: TextStyle(
-                                      color: TaskFlowColors.primaryLight,
-                                      fontSize: 24,
-                                    )),
-                              )
-                            : nextButton(),
-                      ],
-                    ),
-                  ],
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // IconStepper(
+                      //   stepColor: TaskFlowColors.brown,
+                      //   activeStepColor: TaskFlowColors.teal,
+                      //   icons: const [
+                      //     Icon(Icons.face),
+                      //     Icon(Icons.photo),
+                      //   ],
+                      //   activeStep: activeStep,
+                      //   onStepReached: (index) {
+                      //     setState(() {
+                      //       activeStep = index;
+                      //     });
+                      //   },
+                      // ),
+                      // header(),
+                      Container(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: activeStep == 0
+                            ? primaryInfo(
+                                firstNameController,
+                                lastNameController,
+                                emailController,
+                                passwordController)
+                            : secondaryInfo(
+                                genderController,
+                                selectDate,
+                                birthDateController,
+                                categoriesController,
+                                categories,
+                                pickImage,
+                                pickedImage),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          activeStep == 0 ? Container() : previousButton(),
+                          activeStep == upperBound
+                              ? MaterialButton(
+                                  onPressed: () {
+                                    // context.go(TrialPage.routeName);
+                                    // print(
+                                    //     '******************************************************');
+                                    // print(controller.selectedOptions);
+                                    // print(
+                                    //     '******************************************************');
+                                    // log.t(categoriesController
+                                    //     .selectedOptions.runtimeType);
+                                    registerUser();
+                                  },
+                                  color: TaskFlowColors.teal,
+                                  minWidth:
+                                      MediaQuery.of(context).size.width * 0.4,
+                                  padding: const EdgeInsets.only(
+                                      left: 0, right: 0, top: 15, bottom: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Text('SUBMIT',
+                                      style: TextStyle(
+                                        color: TaskFlowColors.primaryLight,
+                                        fontSize: 24,
+                                      )),
+                                )
+                              : nextButton(),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -260,11 +380,13 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
-Widget primaryInfo() {
+Widget primaryInfo(firstNameController, lastNameController, emailController,
+    passwordController) {
   return Column(
     children: [
       const SizedBox(height: 20),
       TextFormField(
+        controller: firstNameController,
         decoration: InputDecoration(
           labelText: 'First name',
           contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
@@ -277,6 +399,7 @@ Widget primaryInfo() {
       ),
       const SizedBox(height: 20),
       TextFormField(
+        controller: lastNameController,
         decoration: InputDecoration(
           labelText: 'Last name',
           contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
@@ -289,6 +412,7 @@ Widget primaryInfo() {
       ),
       const SizedBox(height: 20),
       TextFormField(
+        controller: emailController,
         decoration: InputDecoration(
           labelText: 'Email',
           contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
@@ -301,6 +425,7 @@ Widget primaryInfo() {
       ),
       const SizedBox(height: 20),
       TextFormField(
+        controller: passwordController,
         decoration: InputDecoration(
           labelText: 'Password',
           contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
@@ -316,11 +441,13 @@ Widget primaryInfo() {
   );
 }
 
-Widget secondaryInfo(selectDate, dateController, controller, pickImage, image) {
+Widget secondaryInfo(genderController, selectDate, birthDateController,
+    categoriesController, categories, pickImage, pickedImage) {
   return Column(
     children: [
       const SizedBox(height: 20),
       TextFormField(
+        controller: genderController,
         decoration: InputDecoration(
           labelText: 'Gender',
           contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
@@ -333,7 +460,7 @@ Widget secondaryInfo(selectDate, dateController, controller, pickImage, image) {
       ),
       const SizedBox(height: 20),
       TextFormField(
-        controller: dateController,
+        controller: birthDateController,
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelText: 'Birth date',
@@ -351,22 +478,9 @@ Widget secondaryInfo(selectDate, dateController, controller, pickImage, image) {
       ),
       const SizedBox(height: 20),
       MultiSelectDropDown(
-        controller: controller,
+        controller: categoriesController,
         onOptionSelected: (List<ValueItem> selectedOptions) {},
-        options: const <ValueItem>[
-          ValueItem(label: 'Option 1', value: '1'),
-          ValueItem(label: 'Option 2', value: '2'),
-          ValueItem(label: 'Option 3', value: '3'),
-          ValueItem(label: 'Option 4', value: '4'),
-          ValueItem(label: 'Option 5', value: '5'),
-          ValueItem(label: 'Option 6', value: '6'),
-          ValueItem(label: 'Option 7', value: '7'),
-          ValueItem(label: 'Option 8', value: '8'),
-          ValueItem(label: 'Option 9', value: '9'),
-          ValueItem(label: 'Option 10', value: '10'),
-          ValueItem(label: 'Option 11', value: '11'),
-          ValueItem(label: 'Option 12', value: '12'),
-        ],
+        options: categories,
         hint: 'Select categories',
         hintColor: TaskFlowColors.secondaryDark,
         hintStyle: TextStyle(
@@ -379,20 +493,23 @@ Widget secondaryInfo(selectDate, dateController, controller, pickImage, image) {
         padding: const EdgeInsets.only(top: 4, left: 10, right: 4, bottom: 4),
         borderWidth: 1,
         borderColor: TaskFlowColors.secondaryDark,
+        dropdownBackgroundColor: TaskFlowColors.secondaryLight,
+        optionsBackgroundColor: TaskFlowColors.secondaryLight,
         chipConfig: ChipConfig(
-            wrapType: WrapType.values[0],
-            spacing: 3,
-            padding: const EdgeInsets.all(4),
-            autoScroll: true,
-            labelPadding: const EdgeInsets.only(top: 3, left: 8),
-            deleteIconColor: TaskFlowColors.secondaryDark,
-            backgroundColor: TaskFlowColors.grey,
-            radius: 6,
-            labelStyle: TextStyle(
-              color: TaskFlowColors.primaryDark,
-              fontSize: 20,
-            )),
-        dropdownHeight: 300,
+          wrapType: WrapType.values[0],
+          spacing: 3,
+          padding: const EdgeInsets.all(4),
+          autoScroll: true,
+          labelPadding: const EdgeInsets.only(top: 3, left: 8),
+          deleteIconColor: TaskFlowColors.secondaryDark,
+          backgroundColor: TaskFlowColors.grey,
+          radius: 6,
+          labelStyle: TextStyle(
+            color: TaskFlowColors.primaryDark,
+            fontSize: 20,
+          ),
+        ),
+        dropdownHeight: 250,
         optionTextStyle: const TextStyle(fontSize: 20),
         selectedOptionIcon: const Icon(Icons.check_circle),
       ),
@@ -475,12 +592,12 @@ Widget secondaryInfo(selectDate, dateController, controller, pickImage, image) {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
                 color: TaskFlowColors.grey,
               ),
-              child: image != null
+              child: pickedImage != null
                   ? Image.file(
-                      image!,
+                      pickedImage!,
                       fit: BoxFit.cover,
                     )
                   : const Icon(

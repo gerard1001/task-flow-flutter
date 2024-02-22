@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:multi_dropdown/multiselect_dropdown.dart';
+import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
-import 'package:task_flow_flutter/config/theme/theme_config.dart';
-// import 'package:task_flow_flutter/config/theme/theme_config.dart';
 
 class TrialPage extends StatefulWidget {
   static const String routeName = '/trial';
@@ -12,106 +10,66 @@ class TrialPage extends StatefulWidget {
   State<TrialPage> createState() => _TrialPageState();
 }
 
+// Create a corresponding State class.
+// This class holds data related to the form.
 class _TrialPageState extends State<TrialPage> {
-  final MultiSelectController _controller = MultiSelectController();
+  // Create a global key that uniquely identifies the Form widget
+  // and allows validation of the form.
+  //
+  // Note: This is a GlobalKey<FormState>,
+  // not a GlobalKey<TrialPageState>.
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController abbaController = TextEditingController();
+
+  var log = Logger(
+    printer: PrettyPrinter(),
+  );
+
+  void submitFx() {
+    if (_formKey.currentState!.validate()) {
+      log.t(abbaController.text);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Build a Form widget using the _formKey created above.
     return PageWrapper(
-        child: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
+      child: Form(
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('WRAP',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(
-              height: 4,
+            TextFormField(
+              // The validator receives the text that the user has entered.
+              controller: abbaController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter some text';
+                }
+                return null;
+              },
             ),
-            MultiSelectDropDown(
-              controller: _controller,
-              onOptionSelected: (List<ValueItem> selectedOptions) {},
-              options: const <ValueItem>[
-                ValueItem(label: 'Option 1', value: '1'),
-                ValueItem(label: 'Option 2', value: '2'),
-                ValueItem(label: 'Option 3', value: '3'),
-                ValueItem(label: 'Option 4', value: '4'),
-                ValueItem(label: 'Option 5', value: '5'),
-                ValueItem(label: 'Option 6', value: '6'),
-                ValueItem(label: 'Option 7', value: '7'),
-                ValueItem(label: 'Option 8', value: '8'),
-                ValueItem(label: 'Option 9', value: '9'),
-                ValueItem(label: 'Option 10', value: '10'),
-                ValueItem(label: 'Option 11', value: '11'),
-                ValueItem(label: 'Option 12', value: '12'),
-              ],
-              hint: 'Select any',
-              hintColor: TaskFlowColors.secondaryDark,
-              hintStyle: TextStyle(
-                fontSize: 20,
-                color: TaskFlowColors.secondaryDark,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: ElevatedButton(
+                onPressed: () {
+                  // Validate returns true if the form is valid, or false otherwise.
+                  if (_formKey.currentState!.validate()) {
+                    // If the form is valid, display a snackbar. In the real world,
+                    // you'd often call a server or save the information in a database.
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(abbaController.text)),
+                    );
+                    submitFx();
+                  }
+                },
+                child: const Text('Submit'),
               ),
-              selectionType: SelectionType.multi,
-              borderRadius: 10,
-              fieldBackgroundColor: Colors.grey[300]!,
-              padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
-              borderWidth: 2,
-              chipConfig: ChipConfig(
-                  wrapType: WrapType.wrap,
-                  padding: const EdgeInsets.all(4),
-                  autoScroll: true,
-                  labelPadding: const EdgeInsets.only(top: 3, left: 8),
-                  deleteIconColor: TaskFlowColors.secondaryDark,
-                  backgroundColor: TaskFlowColors.grey,
-                  labelStyle: TextStyle(
-                    color: TaskFlowColors.primaryDark,
-                    fontSize: 20,
-                  )),
-              dropdownHeight: 300,
-              optionTextStyle: const TextStyle(fontSize: 20),
-              selectedOptionIcon: const Icon(Icons.check_circle),
-            ),
-            const SizedBox(
-              height: 50,
-            ),
-            Wrap(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _controller.clearAllSelection();
-                  },
-                  child: const Text('CLEAR'),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // debugPrint(_controller.getSelectedOptions.toString());
-                  },
-                  child: const Text('Get Selected Options'),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_controller.isDropdownOpen) {
-                      _controller.hideDropdown();
-                    } else {
-                      _controller.showDropdown();
-                    }
-                  },
-                  child: const Text('SHOW/HIDE DROPDOWN'),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 50,
             ),
           ],
         ),
       ),
-    ));
+    );
   }
 }

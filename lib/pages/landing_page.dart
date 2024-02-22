@@ -62,7 +62,7 @@ class _LandingPageState extends State<LandingPage> {
                       )
                     : GestureDetector(
                         onTap: () {
-                          controller.jumpToPage(2);
+                          context.go(GetStartedPage.routeName);
                         },
                         child: const Text(
                           'Skip',

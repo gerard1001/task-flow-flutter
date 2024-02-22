@@ -16,6 +16,8 @@ dependencies:
   multi_dropdown: ^2.1.4
   logger: ^2.0.2+1
   image_picker: ^1.0.7
+  dio: ^5.4.1
+  connectivity_plus: ^5.0.2
 
 dev_dependencies:
   flutter_test:
