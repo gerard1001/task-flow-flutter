@@ -46,7 +46,7 @@ class _LandingPageState extends State<LandingPage> {
             ],
           ),
           Container(
-            alignment: const Alignment(0, 0.7),
+            alignment: const Alignment(0, 0.9),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

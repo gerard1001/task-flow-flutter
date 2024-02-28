@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:task_flow_flutter/pages/get_started_page.dart';
 import 'package:task_flow_flutter/pages/landing_page.dart';
+import 'package:task_flow_flutter/pages/sign_in_page.dart';
 import 'package:task_flow_flutter/pages/sign_up_page.dart';
 import 'package:task_flow_flutter/pages/trials.dart';
 
@@ -52,6 +53,10 @@ final routesConfig = GoRouter(
     GoRoute(
       path: SignUpPage.routeName,
       pageBuilder: customPageBuilder(const SignUpPage()),
+    ),
+    GoRoute(
+      path: SignInPage.routeName,
+      pageBuilder: customPageBuilder(const SignInPage()),
     ),
     GoRoute(
         path: TrialPage.routeName,

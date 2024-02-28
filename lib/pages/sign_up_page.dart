@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/api/category_api.dart';
@@ -9,6 +10,11 @@ import 'package:task_flow_flutter/api/user_api.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
+import 'package:task_flow_flutter/pages/get_started_page.dart';
+import 'package:task_flow_flutter/pages/sign_in_page.dart';
+import 'package:task_flow_flutter/pages/trials.dart';
+
+List<String> genderList = <String>['male', 'female', 'other'];
 
 class SignUpPage extends StatefulWidget {
   static const String routeName = '/sign-up';
@@ -26,19 +32,17 @@ class _SignUpPageState extends State<SignUpPage> {
 
   List<ValueItem> categories = [];
 
+  String? genderValue;
+
   @override
   void initState() {
     super.initState();
-    fetchCategories(); // Fetch categories when the widget initializes
+    fetchCategories();
   }
 
   Future<void> fetchCategories() async {
     try {
       final response = await CategoryApi.getCategories();
-
-      log.f('******************************************************');
-      log.t(response);
-      log.f('******************************************************');
 
       if (response != null && response.statusCode == 200) {
         List<ValueItem> fetchedCategories =
@@ -54,6 +58,7 @@ class _SignUpPageState extends State<SignUpPage> {
         });
       } else {
         log.e('Invalid or unsuccessful response from the API.');
+        log.w(response);
       }
     } catch (e) {
       log.e('Error fetching categories: $e');
@@ -76,15 +81,40 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> selectDate() async {
     DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2050),
-    );
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(1900),
+        lastDate: DateTime(2050),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: TaskFlowColors.teal,
+                onPrimary: TaskFlowColors.primaryLight,
+                onSurface: TaskFlowColors.secondaryDark,
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: TaskFlowColors.teal,
+                ),
+              ),
+            ),
+            child: child!,
+          );
+        });
 
     if (picked != null) {
       setState(() {
         birthDateController.text = picked.toString().split(" ")[0];
+      });
+    }
+  }
+
+  Future<void> setGender(selectedValue) async {
+    // await genderValue;
+    if (selectedValue != null) {
+      setState(() {
+        genderValue = selectedValue;
       });
     }
   }
@@ -118,6 +148,21 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  String? validateEmail(String? value) {
+    const pattern = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'"
+        r'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-'
+        r'\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*'
+        r'[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4]'
+        r'[0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9]'
+        r'[0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\'
+        r'x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])';
+    final regex = RegExp(pattern);
+
+    return value!.isNotEmpty && !regex.hasMatch(value) || value.isEmpty
+        ? 'Enter a valid email address'
+        : null;
+  }
+
   void submitFx() {
     if (_formKey.currentState!.validate()) {
       log.t({
@@ -125,7 +170,7 @@ class _SignUpPageState extends State<SignUpPage> {
         'lastName': lastNameController.text,
         'email': emailController.text,
         'password': passwordController.text,
-        'gender': genderController.text,
+        'gender': genderValue,
         'birthDate': birthDateController.text,
         'categories':
             categoriesController.selectedOptions.map((e) => e.value).toList(),
@@ -147,12 +192,6 @@ class _SignUpPageState extends State<SignUpPage> {
         pickedImage!,
       );
 
-      log.f('******************************************************');
-      log.t(response);
-      log.t(response?.data);
-      log.t(response?.statusCode);
-      log.f('******************************************************');
-
       if (response != null && response.statusCode == 201) {
         showInSnackBar(response.data['message'], 'success');
         log.t(response.data);
@@ -166,11 +205,13 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return PageWrapper(
+      showAppBar: true,
+      showBottomNavBar: false,
+      popRouteName: GetStartedPage.routeName,
       child: Container(
         padding:
-            const EdgeInsets.only(top: 80.0, left: 20, right: 20, bottom: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+            const EdgeInsets.only(top: 20.0, left: 20, right: 20, bottom: 20),
+        child: ListView(
           children: [
             GestureDetector(
               onTap: () {},
@@ -180,115 +221,135 @@ class _SignUpPageState extends State<SignUpPage> {
                     height: 80, width: 80),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(top: 20.0),
+            Container(
+              padding: const EdgeInsets.only(top: 20.0),
               child: Text(
                 'Register To TaskFlow',
-                style: TaskFlowStyles.largeBold,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: TaskFlowColors.primaryDark,
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 0.0),
-              child: Row(
-                children: [
-                  const Text(
-                    'Already have an account?',
-                    style: TaskFlowStyles.medium,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Ink(
-                      decoration: const ShapeDecoration(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5)),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: Wrap(
+                  children: [
+                    const Text(
+                      'Already have an account?',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Ink(
+                        decoration: const ShapeDecoration(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(5)),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Colors.blue[700],
-                          fontSize: 24,
+                        child: GestureDetector(
+                          onTap: () {
+                            context.go(SignInPage.routeName);
+                          },
+                          child: Text(
+                            'Login',
+                            style: TextStyle(
+                              color: TaskFlowColors.teal,
+                              fontSize: 18,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // IconStepper(
-                      //   stepColor: TaskFlowColors.brown,
-                      //   activeStepColor: TaskFlowColors.teal,
-                      //   icons: const [
-                      //     Icon(Icons.face),
-                      //     Icon(Icons.photo),
-                      //   ],
-                      //   activeStep: activeStep,
-                      //   onStepReached: (index) {
-                      //     setState(() {
-                      //       activeStep = index;
-                      //     });
-                      //   },
-                      // ),
-                      // header(),
-                      Container(
-                        padding: const EdgeInsets.only(bottom: 20.0),
-                        child: activeStep == 0
-                            ? primaryInfo(
-                                firstNameController,
-                                lastNameController,
-                                emailController,
-                                passwordController)
-                            : secondaryInfo(
-                                genderController,
-                                selectDate,
-                                birthDateController,
-                                categoriesController,
-                                categories,
-                                pickImage,
-                                pickedImage),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          activeStep == 0 ? Container() : previousButton(),
-                          activeStep == upperBound
-                              ? MaterialButton(
-                                  onPressed: () {
-                                    // context.go(TrialPage.routeName);
-                                    // print(
-                                    //     '******************************************************');
-                                    // print(controller.selectedOptions);
-                                    // print(
-                                    //     '******************************************************');
-                                    // log.t(categoriesController
-                                    //     .selectedOptions.runtimeType);
-                                    registerUser();
-                                  },
-                                  color: TaskFlowColors.teal,
-                                  minWidth:
-                                      MediaQuery.of(context).size.width * 0.4,
-                                  padding: const EdgeInsets.only(
-                                      left: 0, right: 0, top: 15, bottom: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Text('SUBMIT',
-                                      style: TextStyle(
-                                        color: TaskFlowColors.primaryLight,
-                                        fontSize: 24,
-                                      )),
-                                )
-                              : nextButton(),
-                        ],
-                      ),
-                    ],
-                  ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // IconStepper(
+                    //   stepColor: TaskFlowColors.brown,
+                    //   activeStepColor: TaskFlowColors.teal,
+                    //   icons: const [
+                    //     Icon(Icons.face),
+                    //     Icon(Icons.photo),
+                    //   ],
+                    //   activeStep: activeStep,
+                    //   onStepReached: (index) {
+                    //     setState(() {
+                    //       activeStep = index;
+                    //     });
+                    //   },
+                    // ),
+                    // header(),
+                    Container(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: activeStep == 0
+                          ? primaryInfo(
+                              firstNameController,
+                              lastNameController,
+                              emailController,
+                              passwordController,
+                              validateEmail)
+                          : secondaryInfo(
+                              genderController,
+                              selectDate,
+                              birthDateController,
+                              categoriesController,
+                              genderValue,
+                              categories,
+                              pickImage,
+                              pickedImage,
+                              setGender,
+                              genderList),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        activeStep == 0 ? Container() : previousButton(),
+                        activeStep == upperBound
+                            ? MaterialButton(
+                                onPressed: () {
+                                  // context.go(TrialPage.routeName);
+                                  // print(
+                                  //     '******************************************************');
+                                  // print(controller.selectedOptions);
+                                  // print(
+                                  //     '******************************************************');
+                                  // log.t(categoriesController
+                                  //     .selectedOptions.runtimeType);
+                                  // registerUser();
+                                  submitFx();
+                                  // log.f(
+                                  //     '******************************************************');
+                                  // log.f(genderValue);
+                                  // log.f(
+                                  //     '******************************************************');
+                                },
+                                color: TaskFlowColors.teal,
+                                minWidth:
+                                    MediaQuery.of(context).size.width * 0.4,
+                                padding: const EdgeInsets.only(
+                                    left: 0, right: 0, top: 13, bottom: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text('SUBMIT',
+                                    style: TextStyle(
+                                      color: TaskFlowColors.primaryLight,
+                                      fontSize: 18,
+                                    )),
+                              )
+                            : nextButton(),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -300,7 +361,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget nextButton() {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: TaskFlowColors.teal,
         shape: BoxShape.circle,
@@ -324,7 +385,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget previousButton() {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: TaskFlowColors.teal,
         shape: BoxShape.circle,
@@ -381,17 +442,24 @@ class _SignUpPageState extends State<SignUpPage> {
 }
 
 Widget primaryInfo(firstNameController, lastNameController, emailController,
-    passwordController) {
+    passwordController, validateEmail) {
   return Column(
     children: [
       const SizedBox(height: 20),
       TextFormField(
         controller: firstNameController,
+        validator: (String? value) {
+          if (value != null && value.isEmpty) {
+            return "Firstname can't be empty";
+          }
+          return null;
+        },
+        keyboardType: TextInputType.text,
         decoration: InputDecoration(
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
           labelText: 'First name',
-          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
-            fontSize: 24,
+            fontSize: 18,
             color: TaskFlowColors.secondaryDark,
           ),
           border: const OutlineInputBorder(),
@@ -400,11 +468,18 @@ Widget primaryInfo(firstNameController, lastNameController, emailController,
       const SizedBox(height: 20),
       TextFormField(
         controller: lastNameController,
+        validator: (String? value) {
+          if (value != null && value.isEmpty) {
+            return "Lastname can't be empty";
+          }
+          return null;
+        },
+        keyboardType: TextInputType.text,
         decoration: InputDecoration(
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
           labelText: 'Last name',
-          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
-            fontSize: 24,
+            fontSize: 18,
             color: TaskFlowColors.secondaryDark,
           ),
           border: const OutlineInputBorder(),
@@ -413,11 +488,13 @@ Widget primaryInfo(firstNameController, lastNameController, emailController,
       const SizedBox(height: 20),
       TextFormField(
         controller: emailController,
+        validator: validateEmail,
+        keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
           labelText: 'Email',
-          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
-            fontSize: 24,
+            fontSize: 18,
             color: TaskFlowColors.secondaryDark,
           ),
           border: const OutlineInputBorder(),
@@ -426,11 +503,18 @@ Widget primaryInfo(firstNameController, lastNameController, emailController,
       const SizedBox(height: 20),
       TextFormField(
         controller: passwordController,
+        validator: (String? value) {
+          if (value != null && value.isEmpty) {
+            return "Password can't be empty";
+          }
+          return null;
+        },
+        keyboardType: TextInputType.visiblePassword,
         decoration: InputDecoration(
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
           labelText: 'Password',
-          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
           labelStyle: TextStyle(
-            fontSize: 24,
+            fontSize: 18,
             color: TaskFlowColors.secondaryDark,
           ),
           border: const OutlineInputBorder(),
@@ -441,31 +525,88 @@ Widget primaryInfo(firstNameController, lastNameController, emailController,
   );
 }
 
-Widget secondaryInfo(genderController, selectDate, birthDateController,
-    categoriesController, categories, pickImage, pickedImage) {
+Widget secondaryInfo(
+    genderController,
+    selectDate,
+    birthDateController,
+    categoriesController,
+    genderValue,
+    categories,
+    pickImage,
+    pickedImage,
+    setGender,
+    genderList) {
   return Column(
     children: [
       const SizedBox(height: 20),
-      TextFormField(
-        controller: genderController,
-        decoration: InputDecoration(
-          labelText: 'Gender',
-          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
-          labelStyle: TextStyle(
-            fontSize: 24,
-            color: TaskFlowColors.secondaryDark,
-          ),
-          border: const OutlineInputBorder(),
+      DropdownButtonFormField<String>(
+        value: genderValue,
+        hint: Text(
+          "Select gender",
+          style: TextStyle(
+              color: TaskFlowColors.secondaryDark,
+              fontSize: 18,
+              fontWeight: FontWeight.w500),
         ),
+        icon: Icon(Icons.arrow_drop_down, color: TaskFlowColors.primaryDark),
+        dropdownColor: TaskFlowColors.secondaryLight,
+        style: TextStyle(color: TaskFlowColors.primaryDark, fontSize: 18),
+        borderRadius: BorderRadius.circular(1),
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide:
+                BorderSide(color: TaskFlowColors.secondaryDark, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide:
+                BorderSide(color: TaskFlowColors.secondaryDark, width: 1),
+          ),
+        ),
+        isExpanded: false,
+        onChanged: (String? value) {
+          setGender(value);
+        },
+        items: genderList.map<DropdownMenuItem<String>>((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          );
+        }).toList(),
+        validator: (value) => value == null ? 'Gender is required' : null,
       ),
       const SizedBox(height: 20),
+      // TextFormField(
+      //   controller: genderController,
+      //   decoration: InputDecoration(
+      //     contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
+      //     labelText: 'Gender',
+      //     labelStyle: TextStyle(
+      //       fontSize: 18,
+      //       color: TaskFlowColors.secondaryDark,
+      //     ),
+      //     border: const OutlineInputBorder(),
+      //   ),
+      // ),
+      // const SizedBox(height: 20),
       TextFormField(
         controller: birthDateController,
+        validator: (String? value) {
+          if (value != null && value.isEmpty) {
+            return "Birth date can't be empty";
+          }
+          return null;
+        },
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.fromLTRB(10.0, 25.0, 20.0, 10.0),
+          contentPadding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 15.0),
           labelText: 'Birth date',
           labelStyle: TextStyle(
-            fontSize: 24,
+            fontSize: 18,
             color: TaskFlowColors.secondaryDark,
           ),
           border: const OutlineInputBorder(),
@@ -484,7 +625,7 @@ Widget secondaryInfo(genderController, selectDate, birthDateController,
         hint: 'Select categories',
         hintColor: TaskFlowColors.secondaryDark,
         hintStyle: TextStyle(
-          fontSize: 24,
+          fontSize: 18,
           color: TaskFlowColors.secondaryDark,
         ),
         selectionType: SelectionType.multi,
@@ -521,9 +662,12 @@ Widget secondaryInfo(genderController, selectDate, birthDateController,
           children: [
             Column(
               children: [
-                const Text(
+                Text(
                   'Upload picture',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: TaskFlowColors.primaryDark),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -543,14 +687,14 @@ Widget secondaryInfo(genderController, selectDate, birthDateController,
                                   color: TaskFlowColors.brown),
                               child: const Icon(
                                 Icons.file_upload_outlined,
-                                size: 40,
+                                size: 32,
                               ),
                             ),
                           ),
                           const Text(
                             'Upload',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 14,
                             ),
                           )
                         ],
@@ -571,14 +715,14 @@ Widget secondaryInfo(genderController, selectDate, birthDateController,
                                   color: TaskFlowColors.brown),
                               child: const Icon(
                                 Icons.camera_alt_outlined,
-                                size: 40,
+                                size: 32,
                               ),
                             ),
                           ),
                           const Text(
                             'Take picture',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 14,
                             ),
                           )
                         ],
