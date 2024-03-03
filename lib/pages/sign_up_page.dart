@@ -12,7 +12,6 @@ import 'package:task_flow_flutter/config/theme/theme_config.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
 import 'package:task_flow_flutter/pages/get_started_page.dart';
 import 'package:task_flow_flutter/pages/sign_in_page.dart';
-import 'package:task_flow_flutter/pages/trials.dart';
 
 List<String> genderList = <String>['male', 'female', 'other'];
 
@@ -179,6 +178,10 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+  void redirectToLogin() {
+    context.go(SignInPage.routeName);
+  }
+
   Future registerUser() async {
     if (_formKey.currentState!.validate()) {
       final response = await UserApi.registerUser(
@@ -186,17 +189,23 @@ class _SignUpPageState extends State<SignUpPage> {
         lastNameController.text,
         emailController.text,
         passwordController.text,
-        genderController.text,
+        genderValue!,
         birthDateController.text,
-        categoriesController.selectedOptions.map((e) => e.value).toList(),
-        pickedImage!,
+        categoriesController.selectedOptions
+            .map((e) => e.value.toString())
+            .toList(),
+        pickedImage,
       );
 
       if (response != null && response.statusCode == 201) {
+        log.f(response);
         showInSnackBar(response.data['message'], 'success');
-        log.t(response.data);
+        redirectToLogin();
+        setState(() {
+          _formKey.currentState!.reset();
+          pickedImage = null;
+        });
       } else {
-        log.f(response?.data);
         showInSnackBar(response!.data['error'], 'error');
       }
     }
@@ -324,13 +333,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                   //     '******************************************************');
                                   // log.t(categoriesController
                                   //     .selectedOptions.runtimeType);
-                                  // registerUser();
-                                  submitFx();
-                                  // log.f(
-                                  //     '******************************************************');
-                                  // log.f(genderValue);
-                                  // log.f(
-                                  //     '******************************************************');
+                                  registerUser();
+                                  // submitFx();
                                 },
                                 color: TaskFlowColors.teal,
                                 minWidth:
@@ -398,6 +402,7 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         onPressed: () {
           if (activeStep > 0) {
+            log.f(activeStep);
             setState(() {
               activeStep--;
             });

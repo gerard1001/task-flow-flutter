@@ -8,36 +8,6 @@ var log = Logger(
   printer: PrettyPrinter(),
 );
 
-// class UserApi {
-//   static Future<Response?> registerUser(
-//       String firstName,
-//       String lastName,
-//       String email,
-//       String password,
-//       String gender,
-//       String birtDate,
-//       List<dynamic> categories,
-//       File picture) async {
-//     try {
-//       Response? response =
-//           await DioInstance.getDio().post('/user/register', data: {
-//         "firstName": firstName,
-//         "lastName": lastName,
-//         "email": email,
-//         "password": password,
-//         "gender": gender,
-//         "birthDate": birtDate,
-//         "categories": categories,
-//         "picture": await MultipartFile.fromFile(picture.path),
-//       });
-//       return response;
-//     } on DioException catch (e) {
-//       log.f(e);
-//       return e.response!;
-//     }
-//   }
-// }
-
 class UserApi {
   static Future<Response?> registerUser(
     String firstName,
@@ -46,10 +16,17 @@ class UserApi {
     String password,
     String gender,
     String birtDate,
-    List<dynamic> categories,
-    File picture,
+    List<String>? categories,
+    File? picture,
   ) async {
     try {
+      Map<String, dynamic> categoriesMap = {};
+      if (categories != null) {
+        for (int i = 0; i < categories.length; i++) {
+          categoriesMap['categories[$i]'] = categories[i];
+        }
+      }
+
       FormData formData = FormData.fromMap({
         "firstName": firstName,
         "lastName": lastName,
@@ -57,12 +34,26 @@ class UserApi {
         "password": password,
         "gender": gender,
         "birthDate": birtDate,
-        "categories": categories,
-        "picture": await MultipartFile.fromFile(picture.path),
+        ...categoriesMap,
+        "picture": await MultipartFile.fromFile(picture!.path),
       });
 
       Response? response =
           await DioInstance.getDio().post('/user/register', data: formData);
+      return response;
+    } on DioException catch (e) {
+      log.f(e);
+      return e.response!;
+    }
+  }
+
+  static Future<Response?> loginUser(String email, String password) async {
+    try {
+      Response? response =
+          await DioInstance.getDio().post('/user/login', data: {
+        "email": email,
+        "password": password,
+      });
       return response;
     } on DioException catch (e) {
       log.f(e);

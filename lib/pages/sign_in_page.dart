@@ -1,10 +1,15 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
+import 'package:task_flow_flutter/api/user_api.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 import 'package:task_flow_flutter/pages/get_started_page.dart';
 import 'package:task_flow_flutter/pages/sign_up_page.dart';
+import 'package:task_flow_flutter/pages/trials.dart';
 
 class SignInPage extends StatefulWidget {
   static const String routeName = '/sign-in';
@@ -18,17 +23,53 @@ class _SignInPageState extends State<SignInPage> {
   var log = Logger(
     printer: PrettyPrinter(),
   );
+  final userBox = Hive.box('user');
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  void submitFx() {
+  void submitFx() async {
     if (_formKey.currentState!.validate()) {
-      log.t({
-        'email': emailController.text,
-        'password': passwordController.text,
-      });
+      final response = await UserApi.loginUser(
+        emailController.text,
+        passwordController.text,
+      );
+
+      log.w(response);
+
+      if (response != null && response.statusCode == 200) {
+        // context.go(GetStartedPage.routeName);
+        context.go(TrialPage.routeName);
+        userBox.put('token', response.data['token']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.data['message'] ?? 'Success'),
+            backgroundColor: TaskFlowColors.teal,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response!.data['error'] ?? 'Something went wrong'),
+            backgroundColor: Colors.red[400],
+          ),
+        );
+      }
+      // else {
+      //   // ignore: use_build_context_synchronously
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(
+      //       content: Text(response!.data['error'] ?? 'Something went wrong'),
+      //       backgroundColor: Colors.red[400],
+      //     ),
+      //   );
+      // }
     }
   }
 
@@ -163,13 +204,13 @@ class _SignInPageState extends State<SignInPage> {
                           submitFx();
                         },
                         color: TaskFlowColors.teal,
-                        minWidth: MediaQuery.of(context).size.width * 0.4,
+                        minWidth: MediaQuery.of(context).size.width * 1,
                         padding: const EdgeInsets.only(
                             left: 0, right: 0, top: 13, bottom: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
-                        child: Text('SUBMIT',
+                        child: Text('LOGIN',
                             style: TextStyle(
                               color: TaskFlowColors.primaryLight,
                               fontSize: 18,

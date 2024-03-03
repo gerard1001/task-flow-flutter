@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
 
@@ -18,56 +19,33 @@ class _TrialPageState extends State<TrialPage> {
   //
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<TrialPageState>.
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController abbaController = TextEditingController();
-
   var log = Logger(
     printer: PrettyPrinter(),
   );
 
+  final userBox = Hive.box('user');
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void submitFx() {
-    if (_formKey.currentState!.validate()) {
-      log.t(abbaController.text);
-    }
+    final abbaController = userBox.get('token', defaultValue: '');
+    log.t(abbaController);
   }
 
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     return PageWrapper(
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              // The validator receives the text that the user has entered.
-              controller: abbaController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter some text';
-                }
-                return null;
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: ElevatedButton(
-                onPressed: () {
-                  // Validate returns true if the form is valid, or false otherwise.
-                  if (_formKey.currentState!.validate()) {
-                    // If the form is valid, display a snackbar. In the real world,
-                    // you'd often call a server or save the information in a database.
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(abbaController.text)),
-                    );
-                    submitFx();
-                  }
-                },
-                child: const Text('Submit'),
-              ),
-            ),
-          ],
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        child: MaterialButton(
+          onPressed: () {
+            submitFx();
+          },
+          child: const Text('Submit'),
         ),
       ),
     );
