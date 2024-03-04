@@ -1,18 +1,17 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 
 class PageWrapper extends StatefulWidget {
   final Widget child;
   final bool showAppBar;
-  final String? popRouteName;
   final bool showBottomNavBar;
 
   const PageWrapper({
     super.key,
     required this.child,
     this.showAppBar = false,
-    this.popRouteName = '/',
     this.showBottomNavBar = true,
   });
 
@@ -42,11 +41,7 @@ class _PageWrapperState extends State<PageWrapper> {
                   color: TaskFlowColors.secondaryLight,
                 ),
                 onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go(widget.popRouteName!);
-                  }
+                  context.router.back();
                 },
               ),
             )

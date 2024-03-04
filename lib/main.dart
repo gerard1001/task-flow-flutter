@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:task_flow_flutter/config/routes/routes_config.dart';
+import 'package:task_flow_flutter/config/routes/app_router.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 
 void main() async {
@@ -15,11 +15,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppRouter appRouter = AppRouter();
     return MaterialApp.router(
       title: 'Task Flow',
       debugShowCheckedModeBanner: false,
       theme: TaskFlowTheme.themeData,
-      routerConfig: routesConfig,
+      routerConfig: appRouter.config(),
     );
   }
 }

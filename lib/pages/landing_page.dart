@@ -1,16 +1,16 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 import 'package:task_flow_flutter/components/intro_pages/landing_page_one.dart';
 import 'package:task_flow_flutter/components/intro_pages/landing_page_three.dart';
 import 'package:task_flow_flutter/components/intro_pages/landing_page_two.dart';
-import 'package:task_flow_flutter/pages/get_started_page.dart';
 
+@RoutePage()
 class LandingPage extends StatefulWidget {
-  static const String routeName = '/';
-
   const LandingPage({super.key});
 
   @override
@@ -62,7 +62,7 @@ class _LandingPageState extends State<LandingPage> {
                       )
                     : GestureDetector(
                         onTap: () {
-                          context.go(GetStartedPage.routeName);
+                          AutoRouter.of(context).push(const GetStartedRoute());
                         },
                         child: const Text(
                           'Skip',
@@ -85,7 +85,7 @@ class _LandingPageState extends State<LandingPage> {
                       )
                     : GestureDetector(
                         onTap: () {
-                          context.go(GetStartedPage.routeName);
+                          AutoRouter.of(context).push(const GetStartedRoute());
                         },
                         child: const Text(
                           'Done',

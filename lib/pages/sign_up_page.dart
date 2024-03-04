@@ -1,23 +1,22 @@
 import 'dart:io';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/api/category_api.dart';
 import 'package:task_flow_flutter/api/user_api.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 import 'package:multi_dropdown/multiselect_dropdown.dart';
-import 'package:task_flow_flutter/pages/get_started_page.dart';
-import 'package:task_flow_flutter/pages/sign_in_page.dart';
 
 List<String> genderList = <String>['male', 'female', 'other'];
 
+@RoutePage()
 class SignUpPage extends StatefulWidget {
-  static const String routeName = '/sign-up';
-
   const SignUpPage({super.key});
 
   @override
@@ -179,7 +178,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void redirectToLogin() {
-    context.go(SignInPage.routeName);
+    AutoRouter.of(context).push(const SignInRoute());
   }
 
   Future registerUser() async {
@@ -216,14 +215,15 @@ class _SignUpPageState extends State<SignUpPage> {
     return PageWrapper(
       showAppBar: true,
       showBottomNavBar: false,
-      popRouteName: GetStartedPage.routeName,
       child: Container(
         padding:
             const EdgeInsets.only(top: 20.0, left: 20, right: 20, bottom: 20),
         child: ListView(
           children: [
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                // context.pop();
+              },
               child: Padding(
                 padding: const EdgeInsets.only(top: 20.0),
                 child: Image.asset('assets/images/logo.png',
@@ -261,7 +261,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                         child: GestureDetector(
                           onTap: () {
-                            context.go(SignInPage.routeName);
+                            AutoRouter.of(context).push(const SignInRoute());
                           },
                           child: Text(
                             'Login',
@@ -325,16 +325,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         activeStep == upperBound
                             ? MaterialButton(
                                 onPressed: () {
-                                  // context.go(TrialPage.routeName);
-                                  // print(
-                                  //     '******************************************************');
-                                  // print(controller.selectedOptions);
-                                  // print(
-                                  //     '******************************************************');
-                                  // log.t(categoriesController
-                                  //     .selectedOptions.runtimeType);
                                   registerUser();
-                                  // submitFx();
                                 },
                                 color: TaskFlowColors.teal,
                                 minWidth:

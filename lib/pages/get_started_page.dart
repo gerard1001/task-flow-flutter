@@ -1,13 +1,14 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
-import 'package:task_flow_flutter/pages/sign_in_page.dart';
-import 'package:task_flow_flutter/pages/sign_up_page.dart';
+// import 'package:task_flow_flutter/pages/sign_in_page.dart';
+// import 'package:task_flow_flutter/pages/sign_up_page.dart';
 
+@RoutePage()
 class GetStartedPage extends StatelessWidget {
-  static const String routeName = '/get-started';
-
   const GetStartedPage({super.key});
 
   @override
@@ -45,7 +46,7 @@ class GetStartedPage extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 20.0),
                 child: MaterialButton(
                   onPressed: () {
-                    context.go(SignInPage.routeName);
+                    AutoRouter.of(context).push(const SignInRoute());
                   },
                   color: TaskFlowColors.brown,
                   minWidth: MediaQuery.of(context).size.width * 0.8,
@@ -65,7 +66,7 @@ class GetStartedPage extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 20.0),
                 child: MaterialButton(
                   onPressed: () {
-                    context.go(SignUpPage.routeName);
+                    AutoRouter.of(context).push(const SignUpRoute());
                   },
                   minWidth: MediaQuery.of(context).size.width * 0.8,
                   padding: const EdgeInsets.only(

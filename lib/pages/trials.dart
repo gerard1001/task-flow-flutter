@@ -1,10 +1,12 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 
+@RoutePage()
 class TrialPage extends StatefulWidget {
-  static const String routeName = '/trial';
   const TrialPage({super.key});
 
   @override
@@ -30,8 +32,14 @@ class _TrialPageState extends State<TrialPage> {
     super.initState();
   }
 
+  void redirectToLogin() {
+    AutoRouter.of(context).push(const SignInRoute());
+  }
+
   void submitFx() {
     final abbaController = userBox.get('token', defaultValue: '');
+    userBox.delete('token');
+    redirectToLogin();
     log.t(abbaController);
   }
 
@@ -41,11 +49,23 @@ class _TrialPageState extends State<TrialPage> {
     return PageWrapper(
       child: Container(
         padding: const EdgeInsets.all(16.0),
-        child: MaterialButton(
-          onPressed: () {
-            submitFx();
-          },
-          child: const Text('Submit'),
+        child: Column(
+          children: [
+            MaterialButton(
+              onPressed: () {
+                submitFx();
+              },
+              child: const Text('Submit'),
+            ),
+            GestureDetector(
+              onTap: () {
+                redirectToLogin();
+              },
+              child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: const Text('To Login')),
+            ),
+          ],
         ),
       ),
     );

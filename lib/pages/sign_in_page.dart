@@ -1,18 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/api/user_api.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
-import 'package:task_flow_flutter/pages/get_started_page.dart';
-import 'package:task_flow_flutter/pages/sign_up_page.dart';
-import 'package:task_flow_flutter/pages/trials.dart';
 
+@RoutePage()
 class SignInPage extends StatefulWidget {
-  static const String routeName = '/sign-in';
   const SignInPage({super.key});
 
   @override
@@ -44,8 +43,6 @@ class _SignInPageState extends State<SignInPage> {
       log.w(response);
 
       if (response != null && response.statusCode == 200) {
-        // context.go(GetStartedPage.routeName);
-        context.go(TrialPage.routeName);
         userBox.put('token', response.data['token']);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -53,6 +50,7 @@ class _SignInPageState extends State<SignInPage> {
             backgroundColor: TaskFlowColors.teal,
           ),
         );
+        AutoRouter.of(context).push(const TaskDisplayRoute());
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -61,16 +59,15 @@ class _SignInPageState extends State<SignInPage> {
           ),
         );
       }
-      // else {
-      //   // ignore: use_build_context_synchronously
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(
-      //       content: Text(response!.data['error'] ?? 'Something went wrong'),
-      //       backgroundColor: Colors.red[400],
-      //     ),
-      //   );
-      // }
     }
+  }
+
+  void showToken() {
+    log.w(userBox.get('token', defaultValue: ''));
+  }
+
+  void navigateToTask() {
+    AutoRouter.of(context).push(const TaskDisplayRoute());
   }
 
   String? validateEmail(String? value) {
@@ -88,11 +85,20 @@ class _SignInPageState extends State<SignInPage> {
         : null;
   }
 
+  void getAnswer() async {
+    final isLoggedIn = await UserApi.validateToken();
+    log.f(isLoggedIn);
+    AutoRouter.of(context).push(const TaskDisplayRoute());
+  }
+
+  void removeToken() {
+    userBox.delete('token');
+  }
+
   @override
   Widget build(BuildContext context) {
     return PageWrapper(
       showAppBar: true,
-      popRouteName: GetStartedPage.routeName,
       showBottomNavBar: false,
       child: Container(
         padding:
@@ -100,7 +106,12 @@ class _SignInPageState extends State<SignInPage> {
         child: ListView(
           children: [
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                // showToken();
+                // navigateToTask();
+                getAnswer();
+                // log.e(userBox.get('token'));
+              },
               child: Padding(
                 padding: const EdgeInsets.only(top: 20.0),
                 child: Image.asset('assets/images/logo.png',
@@ -138,7 +149,8 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                         child: GestureDetector(
                           onTap: () {
-                            context.go(SignUpPage.routeName);
+                            // AutoRouter.of(context).push(const SignUpRoute());
+                            removeToken();
                           },
                           child: Text(
                             'Sign Up',

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:task_flow_flutter/api/dio/dio_instance.dart';
 
@@ -54,6 +55,24 @@ class UserApi {
         "email": email,
         "password": password,
       });
+      return response;
+    } on DioException catch (e) {
+      log.f(e);
+      return e.response!;
+    }
+  }
+
+  static Future<Response?> validateToken() async {
+    try {
+      final String loginToken = Hive.box('user').get('token', defaultValue: '');
+
+      Response? response = await DioInstance.getDio().get('/user/token',
+          options: Options(headers: {
+            "Authorization": "Bearer $loginToken",
+          }));
+      log.i('************************************************************');
+      log.i(response);
+      log.i('************************************************************');
       return response;
     } on DioException catch (e) {
       log.f(e);
