@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-// import 'package:go_router/go_router.dart';
+import 'package:task_flow_flutter/api/user_api.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 
 class PageWrapper extends StatefulWidget {
@@ -28,6 +29,35 @@ class _PageWrapperState extends State<PageWrapper> {
   //   });
   // });
 
+  bool isLoggedIn = false;
+  String currentPath = '';
+
+  @override
+  void initState() {
+    super.initState();
+    checkIsLoggedIn();
+  }
+
+  Future<void> checkIsLoggedIn() async {
+    log.w(
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+    log.w(context.router.currentPath);
+    log.w(
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+
+    final validUser = await UserApi.getUserByToken();
+    if (validUser!.statusCode == 200) {
+      setState(() {
+        isLoggedIn = true;
+        currentPath = context.router.currentPath;
+      });
+    } else {
+      setState(() {
+        isLoggedIn = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,15 +76,41 @@ class _PageWrapperState extends State<PageWrapper> {
               ),
             )
           : null,
-      bottomNavigationBar: widget.showBottomNavBar
+      bottomNavigationBar: isLoggedIn && widget.showBottomNavBar
           ? BottomNavigationBar(
               showSelectedLabels: false,
               showUnselectedLabels: false,
+              currentIndex: 0,
+              onTap: (value) {
+                switch (value) {
+                  case 0:
+                    AutoRouter.of(context).push(const TaskDisplayRoute());
+                    break;
+                  case 1:
+                    AutoRouter.of(context).push(const SignInRoute());
+                    break;
+                  case 2:
+                    AutoRouter.of(context).push(const SignInRoute());
+                    break;
+                  case 3:
+                    AutoRouter.of(context).push(const SignInRoute());
+                    break;
+                  default:
+                }
+              },
               items: [
                 BottomNavigationBarItem(
+                  activeIcon: currentPath == '/task-display-route'
+                      ? Icon(
+                          Icons.task_rounded,
+                          color: TaskFlowColors.brown,
+                          size: 28.0,
+                        )
+                      : null,
                   icon: Icon(
-                    Icons.content_paste,
+                    Icons.task_outlined,
                     color: TaskFlowColors.primaryDark,
+                    size: 28.0,
                   ),
                   label: '',
                 ),
@@ -62,6 +118,7 @@ class _PageWrapperState extends State<PageWrapper> {
                   icon: Icon(
                     Icons.calendar_month_outlined,
                     color: TaskFlowColors.primaryDark,
+                    size: 28.0,
                   ),
                   label: '',
                 ),
@@ -69,6 +126,7 @@ class _PageWrapperState extends State<PageWrapper> {
                   icon: Icon(
                     Icons.people_alt_outlined,
                     color: TaskFlowColors.primaryDark,
+                    size: 28.0,
                   ),
                   label: '',
                 ),
@@ -76,6 +134,7 @@ class _PageWrapperState extends State<PageWrapper> {
                   icon: Icon(
                     Icons.dashboard_outlined,
                     color: TaskFlowColors.primaryDark,
+                    size: 28.0,
                   ),
                   label: '',
                 ),

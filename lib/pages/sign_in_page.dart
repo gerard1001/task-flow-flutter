@@ -86,7 +86,7 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   void getAnswer() async {
-    final isLoggedIn = await UserApi.validateToken();
+    final isLoggedIn = await UserApi.getUserByToken();
     log.f(isLoggedIn);
     AutoRouter.of(context).push(const TaskDisplayRoute());
   }
@@ -99,7 +99,6 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     return PageWrapper(
       showAppBar: true,
-      showBottomNavBar: false,
       child: Container(
         padding:
             const EdgeInsets.only(top: 20.0, left: 20, right: 20, bottom: 20),

@@ -5,7 +5,7 @@ import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 class AuthGuard extends AutoRouteGuard {
   @override
   void onNavigation(NavigationResolver resolver, StackRouter router) async {
-    final isLoggedIn = await UserApi.validateToken();
+    final isLoggedIn = await UserApi.getUserByToken();
     // log.w(isLoggedIn!.statusCode);
     if (isLoggedIn!.statusCode == 200) {
       resolver.next(true);

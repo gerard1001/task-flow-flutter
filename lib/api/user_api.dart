@@ -62,7 +62,7 @@ class UserApi {
     }
   }
 
-  static Future<Response?> validateToken() async {
+  static Future<Response?> getUserByToken() async {
     try {
       final String loginToken = Hive.box('user').get('token', defaultValue: '');
 

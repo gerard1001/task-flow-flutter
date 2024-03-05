@@ -15,7 +15,6 @@ class GetStartedPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return PageWrapper(
       showAppBar: true,
-      showBottomNavBar: false,
       child: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.only(right: 20.0, left: 20.0),
