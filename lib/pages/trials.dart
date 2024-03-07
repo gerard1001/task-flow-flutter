@@ -37,10 +37,8 @@ class _TrialPageState extends State<TrialPage> {
   }
 
   void submitFx() {
-    final abbaController = userBox.get('token', defaultValue: '');
     userBox.delete('token');
     redirectToLogin();
-    log.t(abbaController);
   }
 
   @override

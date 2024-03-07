@@ -43,7 +43,6 @@ class UserApi {
           await DioInstance.getDio().post('/user/register', data: formData);
       return response;
     } on DioException catch (e) {
-      log.f(e);
       return e.response!;
     }
   }
@@ -57,7 +56,6 @@ class UserApi {
       });
       return response;
     } on DioException catch (e) {
-      log.f(e);
       return e.response!;
     }
   }
@@ -66,16 +64,16 @@ class UserApi {
     try {
       final String loginToken = Hive.box('user').get('token', defaultValue: '');
 
-      Response? response = await DioInstance.getDio().get('/user/token',
-          options: Options(headers: {
+      Response? response = await DioInstance.getDio().get(
+        '/user/token',
+        options: Options(
+          headers: {
             "Authorization": "Bearer $loginToken",
-          }));
-      log.i('************************************************************');
-      log.i(response);
-      log.i('************************************************************');
+          },
+        ),
+      );
       return response;
     } on DioException catch (e) {
-      log.f(e);
       return e.response!;
     }
   }

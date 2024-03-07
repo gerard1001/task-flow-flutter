@@ -39,12 +39,6 @@ class _PageWrapperState extends State<PageWrapper> {
   }
 
   Future<void> checkIsLoggedIn() async {
-    log.w(
-        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-    log.w(context.router.currentPath);
-    log.w(
-        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-
     final validUser = await UserApi.getUserByToken();
     if (validUser!.statusCode == 200) {
       setState(() {

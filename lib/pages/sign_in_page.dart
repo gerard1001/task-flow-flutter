@@ -40,8 +40,6 @@ class _SignInPageState extends State<SignInPage> {
         passwordController.text,
       );
 
-      log.w(response);
-
       if (response != null && response.statusCode == 200) {
         userBox.put('token', response.data['token']);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,9 +60,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  void showToken() {
-    log.w(userBox.get('token', defaultValue: ''));
-  }
+  void showToken() {}
 
   void navigateToTask() {
     AutoRouter.of(context).push(const TaskDisplayRoute());
@@ -86,8 +82,7 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   void getAnswer() async {
-    final isLoggedIn = await UserApi.getUserByToken();
-    log.f(isLoggedIn);
+    // final isLoggedIn = await UserApi.getUserByToken();
     AutoRouter.of(context).push(const TaskDisplayRoute());
   }
 
@@ -109,7 +104,6 @@ class _SignInPageState extends State<SignInPage> {
                 // showToken();
                 // navigateToTask();
                 getAnswer();
-                // log.e(userBox.get('token'));
               },
               child: Padding(
                 padding: const EdgeInsets.only(top: 20.0),
