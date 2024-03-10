@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
+import 'package:task_flow_flutter/utils/stacked_widget.dart';
 
 class TaskTile extends StatelessWidget {
   final log = Logger(
@@ -12,6 +14,8 @@ class TaskTile extends StatelessWidget {
   final String startDate;
   final String endDate;
   final String categoryName;
+  final String progress;
+  final List userImages;
 
   TaskTile({
     super.key,
@@ -19,6 +23,8 @@ class TaskTile extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     required this.categoryName,
+    required this.progress,
+    required this.userImages,
   });
 
   String formatDateString(String inputDate) {
@@ -32,6 +38,10 @@ class TaskTile extends StatelessWidget {
   String formatTimeString(String inputDate) {
     final DateTime parsedDate = DateTime.parse(inputDate);
     return DateFormat('HH:mm').format(parsedDate);
+  }
+
+  void showUsers() {
+    log.w(userImages.map((e) => e['picture']).toList());
   }
 
   @override
@@ -77,9 +87,23 @@ class TaskTile extends StatelessWidget {
               ),
               Row(
                 children: [
-                  Icon(
-                    Icons.percent,
-                    color: TaskFlowColors.primaryDark,
+                  CircularPercentIndicator(
+                    radius: 23.0,
+                    lineWidth: 4.0,
+                    percent: 0.75,
+                    center: Container(
+                      padding: const EdgeInsets.only(top: 5, bottom: 0),
+                      child: Text(
+                        '75%',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: TaskFlowColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                    backgroundColor: TaskFlowColors.lightTeal,
+                    progressColor: TaskFlowColors.teal,
+                    animateFromLastPercent: true,
                   ),
                   const SizedBox(
                     width: 20,
@@ -89,10 +113,13 @@ class TaskTile extends StatelessWidget {
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: TaskFlowColors.lightGrey),
-                    child: Icon(
-                      Icons.more_vert,
-                      color: TaskFlowColors.primaryDark,
-                      size: 20,
+                    child: GestureDetector(
+                      onTap: showUsers,
+                      child: Icon(
+                        Icons.more_vert,
+                        color: TaskFlowColors.primaryDark,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -179,7 +206,7 @@ class TaskTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'From',
+                          'To',
                           style: TextStyle(
                             fontSize: 18,
                             color: TaskFlowColors.secondaryDark,
@@ -224,7 +251,84 @@ class TaskTile extends StatelessWidget {
               ],
             ),
           ),
+          Container(
+            margin: const EdgeInsets.only(top: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  child: buildStackedImages(),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'Progress: ',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: TaskFlowColors.primaryDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(
+                        top: 5,
+                        bottom: 2,
+                        left: 10,
+                        right: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: TaskFlowColors.transparentBrown,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        progress,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: TaskFlowColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget buildStackedImages({
+    TextDirection direction = TextDirection.LTR,
+  }) {
+    const double size = 40;
+    const double xShift = 10;
+    final urlImages = userImages.map((image) => image['picture']).toList();
+
+    final items = urlImages.map((urlImage) => buildImage(urlImage)).toList();
+
+    return StackedWidgets(
+      direction: direction,
+      items: items,
+      size: size,
+      xShift: xShift,
+    );
+  }
+
+  Widget buildImage(String urlImage) {
+    const double borderSize = 2;
+
+    return ClipOval(
+      child: Container(
+        padding: const EdgeInsets.all(borderSize),
+        color: TaskFlowColors.primaryLight,
+        child: ClipOval(
+          child: Image.network(
+            urlImage,
+            fit: BoxFit.cover,
+          ),
+        ),
       ),
     );
   }

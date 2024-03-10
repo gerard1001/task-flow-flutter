@@ -124,7 +124,7 @@ class _TaskDisplayPageState extends State<TaskDisplayPage> {
                     return [
                       PopupMenuItem(
                         padding: const EdgeInsets.only(right: 50, left: 20),
-                        value: 'Chats',
+                        value: 'Update',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -193,6 +193,8 @@ class _TaskDisplayPageState extends State<TaskDisplayPage> {
                     startDate: tasks[index]['startDate'],
                     endDate: tasks[index]['endDate'],
                     categoryName: tasks[index]['category']['name'],
+                    progress: tasks[index]['progess'],
+                    userImages: tasks[index]['users'],
                   );
                 },
               ),
