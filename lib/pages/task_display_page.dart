@@ -6,6 +6,7 @@ import 'package:task_flow_flutter/api/task_api.dart';
 import 'package:task_flow_flutter/api/user_api.dart';
 import 'package:task_flow_flutter/components/page_wrapper.dart';
 import 'package:task_flow_flutter/components/task_tile.dart';
+import 'package:task_flow_flutter/config/routes/app_router.gr.dart';
 import 'package:task_flow_flutter/config/theme/theme_config.dart';
 
 @RoutePage()
@@ -60,8 +61,47 @@ class _TaskDisplayPageState extends State<TaskDisplayPage> {
   }
 
   void returnToLogin() {
-    // AutoRouter.of(context).push(const SignInRoute());
+    AutoRouter.of(context).push(const SignInRoute());
     log.w(tasks);
+  }
+
+  void logout() {
+    userBox.delete('token');
+    returnToLogin();
+  }
+
+  Future openBottomSheet() {
+    return showModalBottomSheet(
+      isScrollControlled: true,
+      isDismissible: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(30),
+        ),
+      ),
+      context: context,
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.95,
+          expand: false,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Padding(
+              // padding: EdgeInsets.only(
+              //   bottom: MediaQuery.of(context).viewInsets.bottom,
+              // ),
+              padding: MediaQuery.of(context).viewInsets,
+              child: Container(
+                child: createTaskForm(closeBottomSheet),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void closeBottomSheet() {
+    Navigator.of(context).pop();
   }
 
   @override
@@ -119,7 +159,9 @@ class _TaskDisplayPageState extends State<TaskDisplayPage> {
                       image: decorationImage,
                     ),
                   ),
-                  onSelected: (value) {},
+                  onSelected: (value) {
+                    logout();
+                  },
                   itemBuilder: (BuildContext context) {
                     return [
                       PopupMenuItem(
@@ -184,6 +226,43 @@ class _TaskDisplayPageState extends State<TaskDisplayPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(),
+                GestureDetector(
+                  onTap: () {
+                    openBottomSheet();
+                  },
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: TaskFlowColors.transparentBrown,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add,
+                            color: TaskFlowColors.primaryLight,
+                            size: 24,
+                          ),
+                          Text(
+                            'Task',
+                            style: TextStyle(
+                              color: TaskFlowColors.primaryLight,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ]),
+                  ),
+                )
+              ],
+            ),
             Expanded(
               child: ListView.builder(
                 itemCount: tasks.length,
@@ -204,4 +283,282 @@ class _TaskDisplayPageState extends State<TaskDisplayPage> {
       ),
     );
   }
+}
+
+Widget createTaskForm(closeBottomSheet) {
+  return Column(
+    children: [
+      Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: TaskFlowColors.secondaryDark,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(),
+            Text(
+              'Add New Task',
+              style: TextStyle(
+                color: TaskFlowColors.secondaryDark,
+                fontSize: 20,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => closeBottomSheet(),
+              child: Icon(
+                Icons.close,
+                color: TaskFlowColors.primaryDark,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Expanded(
+        /* Expanded here does a great trick here, SingleChildScrollView functions because of it */
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Form(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Title',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Start Date',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'End Date',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Progress',
+                      labelStyle: TextStyle(
+                        color: TaskFlowColors.secondaryDark,
+                        fontSize: 18,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: TaskFlowColors.secondaryDark,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {}, child: Text('Submit'))
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }

@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:task_flow_flutter/api/dio/interceptors/connectivity_interceptor.dart';
 
-// const _backendApi = 'http://10.0.2.2:4040/api/v1'; /* For android emulator */
+const _backendApi = 'http://10.0.2.2:4040/api/v1'; /* For android emulator */
 // const _backendApi = 'http://localhost:4040/api/v1';
 // const _backendApi = 'http://127.0.0.1:4040/api/v1'; /* For ios simulator */
-const _backendApi =
-    'http://192.168.1.4:4040/api/v1'; /* For android real device */
+// const _backendApi = 'http://192.168.1.4:4040/api/v1'; /* For android real device */
 
 class DioInstance {
   static Dio getDio() {
